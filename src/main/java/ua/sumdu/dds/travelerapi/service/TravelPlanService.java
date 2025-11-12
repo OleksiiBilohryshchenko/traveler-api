@@ -1,10 +1,9 @@
 package ua.sumdu.dds.travelerapi.service;
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ua.sumdu.dds.travelerapi.dto.*;
 import ua.sumdu.dds.travelerapi.exception.NotFoundException;
 import ua.sumdu.dds.travelerapi.exception.ValidationException;
@@ -17,7 +16,6 @@ import ua.sumdu.dds.travelerapi.repository.TravelPlanRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -126,6 +124,7 @@ public class TravelPlanService {
                 .budget(r.budget() != null ? r.budget() : BigDecimal.ZERO)
                 .notes(r.notes())
                 .visitOrder(nextOrder)
+                .version(1)
                 .build();
 
         return locations.save(l);
@@ -135,6 +134,10 @@ public class TravelPlanService {
     public Location updateLocation(UUID id, UpdateLocationRequest r) {
         Location l = locations.findById(id)
                 .orElseThrow(() -> new NotFoundException("Location not found"));
+
+        if (r.version() != null && !l.getVersion().equals(r.version())) {
+            throw new VersionConflictException(l.getVersion());
+        }
 
         OffsetDateTime newArrival = r.arrivalDate() != null ? r.arrivalDate() : l.getArrivalDate();
         OffsetDateTime newDeparture = r.departureDate() != null ? r.departureDate() : l.getDepartureDate();
@@ -149,11 +152,13 @@ public class TravelPlanService {
         if (r.address() != null)     l.setAddress(r.address());
         if (r.latitude() != null)    l.setLatitude(r.latitude());
         if (r.longitude() != null)   l.setLongitude(r.longitude());
-        if (r.arrivalDate() != null) l.setArrivalDate(newArrival);
-        if (r.departureDate() != null) l.setDepartureDate(newDeparture);
         if (r.budget() != null)      l.setBudget(r.budget());
         if (r.notes() != null)       l.setNotes(r.notes());
 
+        l.setArrivalDate(newArrival);
+        l.setDepartureDate(newDeparture);
+
+        l.setVersion(l.getVersion() + 1);
         return locations.save(l);
     }
 

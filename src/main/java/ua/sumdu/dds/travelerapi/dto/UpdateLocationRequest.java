@@ -15,5 +15,8 @@ public record UpdateLocationRequest(
         @JsonProperty("arrival_date") @JsonFormat(shape = JsonFormat.Shape.STRING) OffsetDateTime arrivalDate,
         @JsonProperty("departure_date") @JsonFormat(shape = JsonFormat.Shape.STRING) OffsetDateTime departureDate,
         @DecimalMin("0.00") @Digits(integer = 12, fraction = 2) BigDecimal budget,
-        String notes
+        String notes,
+        @Min(value = 1, message = "version must be >= 1")
+        Integer version
+
 ) {}

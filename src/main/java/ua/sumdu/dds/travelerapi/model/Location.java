@@ -54,13 +54,19 @@ public class Location {
 
     private String notes;
 
+    @Version
+    private Integer version;
+
+
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
         createdAt = OffsetDateTime.now();
+        if (version == null) version = 1;
     }
+
 
     @JsonProperty("travel_plan_id")
     public UUID getTravelPlanId() {
