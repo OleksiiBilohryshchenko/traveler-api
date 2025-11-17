@@ -1,6 +1,3 @@
-# trigger workflow
-# trigger
-
 name: K6 Load Tests
 
 on:
@@ -32,7 +29,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y k6
 
-      # Run EVERY test in performance-tests
       - name: Run all performance tests
         run: |
           for file in tests/performance-tests/*.js; do
