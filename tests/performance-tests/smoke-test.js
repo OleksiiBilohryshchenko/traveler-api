@@ -9,10 +9,10 @@ export const options = {
     },
 };
 
-const BASE_URL = 'http://localhost:4567/api';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:4567/api';
 
 export default function () {
-    console.log('Running Traveler API smoke test...');
+    console.log(`Running Traveler API smoke test against: ${BASE_URL}`);
 
     // ---- 1. Health check ----
     let res = http.get(`${BASE_URL}/health`);
@@ -62,7 +62,6 @@ export default function () {
         headers: { 'Content-Type': 'application/json' },
     });
     check(res, { 'Location created (201)': (r) => r.status === 201 });
-    const location = res.json();
 
     res = http.get(`${BASE_URL}/travel-plans/${plan.id}/locations`);
     check(res, { 'Locations list fetched (200)': (r) => r.status === 200 });
