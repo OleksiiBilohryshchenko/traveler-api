@@ -4,8 +4,16 @@ import { check, sleep } from 'k6';
 export const options = {
     vus: 1,
     iterations: 1,
+
     thresholds: {
         checks: ['rate==1.0'],
+    },
+
+    ext: {
+        influxdb: {
+            address: 'http://localhost:8086', // InfluxDB з Docker
+            database: 'k6',
+        },
     },
 };
 
