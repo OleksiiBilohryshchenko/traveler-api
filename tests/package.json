@@ -12,6 +12,7 @@
     "ramping": "k6 run performance-tests/ramping-load-test.js",
     "stress": "k6 run performance-tests/stress-test.js",
     "spike": "k6 run performance-tests/spike-test.js",
+    "endurance": "k6 run performance-tests/endurance-test.js",
     "test:all": "npm run smoke && npm run crud && npm run read && npm run write && npm run location && npm run validation && npm run journey"
   },
   "license": "ISC"
