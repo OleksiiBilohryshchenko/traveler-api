@@ -10,6 +10,7 @@
     "validation": "k6 run performance-tests/validation-load-test.js",
     "journey": "k6 run performance-tests/realistic-user-journey-test.js",
     "ramping": "k6 run performance-tests/ramping-load-test.js",
+    "stress": "k6 run performance-tests/stress-test.js",
     "test:all": "npm run smoke && npm run crud && npm run read && npm run write && npm run location && npm run validation && npm run journey"
   },
   "license": "ISC"
