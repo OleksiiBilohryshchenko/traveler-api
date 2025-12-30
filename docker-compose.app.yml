@@ -1,31 +1,116 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  db:
-    image: postgres:16-alpine
+  postgres:
+    image: postgres:18-alpine
     container_name: traveler_db
     restart: unless-stopped
+
+    env_file:
+      - .env
+
     environment:
-      POSTGRES_DB: ${DB_NAME:-traveler}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_logical_replication_workers=4
+      - -c
+      - max_worker_processes=10
+
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
+
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-migrations:ro
+      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
+      - ./db/replications/publisher:/docker-entrypoint-replications:ro
+
     networks:
       - traveler_network
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-traveler}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
+      start_period: 30s
+
+  postgres_sub:
+    image: postgres:18-alpine
+    container_name: traveler_db_replica
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - pgdata_replica:/var/lib/postgresql/data
+      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
+      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
+
+    networks:
+      - traveler_network
+
+  postgres_sub2:
+    image: postgres:18-alpine
+    container_name: traveler_db_replica2
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    command:
+      - postgres
+      - -c
+      - listen_addresses=*
+      - -c
+      - wal_level=logical
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - pgdata_replica2:/var/lib/postgresql/data
+      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
+      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
+
+    networks:
+      - traveler_network
 
   app:
     build:
@@ -33,32 +118,30 @@ services:
       dockerfile: Dockerfile
     container_name: traveler_app
     restart: unless-stopped
+
+    env_file:
+      - .env
+
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
+
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:${DB_PORT}/${DB_NAME}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SERVER_PORT: ${APP_PORT}
+
     ports:
-      - "${APP_PORT:-4567}:4567"
+      - "${APP_PORT}:${APP_PORT}"
+
     networks:
       - traveler_network
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${APP_PORT}/health || exit 1"]
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
 
 volumes:
   pgdata:
+  pgdata_replica:
+  pgdata_replica2:
 
 networks:
   traveler_network:
