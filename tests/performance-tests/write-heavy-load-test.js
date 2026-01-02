@@ -59,12 +59,12 @@ import {
   deleteTravelPlan,
   deleteLocation,
   thinkTime,
-} from '../../SumDU.DDS.25F.lab2/utils/api-client.js';
+} from './utils/api-client.js';
 import {
   generateTravelPlan,
   generateLocation,
   generateMultipleLocations,
-} from '../../SumDU.DDS.25F.lab2/utils/data-generator.js';
+} from './utils/data-generator.js';
 
 // Кастомні метрики для запису
 const writeOperations = new Counter('write_operations');

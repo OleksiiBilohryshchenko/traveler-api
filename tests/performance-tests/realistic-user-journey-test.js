@@ -62,12 +62,12 @@ import {
   deleteLocation,
   checkHealth,
   thinkTime,
-} from '../../SumDU.DDS.25F.lab2/utils/api-client.js';
+} from './utils/api-client.js';
 import {
   generateTravelPlan,
   generateLocation,
   generateLocationWithDates,
-} from '../../SumDU.DDS.25F.lab2/utils/data-generator.js';
+} from './utils/data-generator.js';
 
 // Кастомні метрики для user journeys
 const sessionCompleted = new Rate('session_completion_rate');

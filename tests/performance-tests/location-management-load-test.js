@@ -47,12 +47,12 @@ import {
   deleteLocation,
   deleteTravelPlan,
   thinkTime,
-} from '../../SumDU.DDS.25F.lab2/utils/api-client.js';
+} from './utils/api-client.js';
 import {
   generateTravelPlan,
   generateLocation,
   generateLocationWithDates,
-} from '../../SumDU.DDS.25F.lab2/utils/data-generator.js';
+} from './utils/data-generator.js';
 
 // ============================================================================
 // НАЛАШТУВАННЯ ТЕСТУ

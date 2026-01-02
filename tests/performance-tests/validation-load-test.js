@@ -57,12 +57,12 @@ import {
   updateTravelPlan,
   deleteTravelPlan,
   testValidation,
-} from '../../SumDU.DDS.25F.lab2/utils/api-client.js';
+} from './utils/api-client.js';
 import {
   generateTravelPlan,
   generateLocation,
   generateInvalidData,
-} from '../../SumDU.DDS.25F.lab2/utils/data-generator.js';
+} from './utils/data-generator.js';
 import { ENDPOINTS } from '../../../traveler-api-tests/config/endpoints.js';
 
 // Спеціальні метрики
