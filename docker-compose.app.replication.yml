@@ -21,22 +21,15 @@ services:
       - -c
       - wal_level=logical
       - -c
-      - max_replication_slots=10
-      - -c
       - max_wal_senders=10
       - -c
-      - max_logical_replication_workers=4
-      - -c
-      - max_worker_processes=10
+      - max_replication_slots=10
 
     ports:
       - "5432:5432"
 
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-migrations:ro
-      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
-      - ./db/replications/publisher:/docker-entrypoint-replications:ro
 
     networks:
       - traveler_network
@@ -46,79 +39,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
-
-  postgres_sub:
+  postgres_physical:
     image: postgres:18-alpine
-    container_name: traveler_db_replica
-    restart: unless-stopped
-
-    env_file:
-      - .env
-
+    container_name: traveler_db_physical
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-
-    command:
-      - postgres
+      PGPASSWORD: replicator_pass
+      PGDATA: /var/lib/postgresql/data
+    entrypoint:
+      - /bin/sh
       - -c
-      - listen_addresses=*
-      - -c
-      - wal_level=logical
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-    ports:
-      - "55432:5432"
-
+      - |
+        echo "Fixing permissions..."
+        chown -R postgres:postgres /var/lib/postgresql/data
+        
+        echo "Waiting for primary..."
+        until pg_isready -h traveler_db -p 5432; do
+          sleep 2
+        done
+        
+        echo "Cleaning data directory..."
+        rm -rf /var/lib/postgresql/data/*
+        
+        echo "Running base backup..."
+        su postgres -c "
+          pg_basebackup \
+            -h traveler_db \
+            -p 5432 \
+            -U replicator \
+            -D /var/lib/postgresql/data \
+            -Fp -Xs -P -R
+        "
+        
+        echo "Starting postgres..."
+        exec su postgres -c 'postgres -D /var/lib/postgresql/data'
     volumes:
-      - pgdata_replica:/var/lib/postgresql/data
-      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
-      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
-
+      - pgdata_physical:/var/lib/postgresql/data
     networks:
       - traveler_network
 
-
-  postgres_sub2:
-    image: postgres:18-alpine
-    container_name: traveler_db_replica2
-    restart: unless-stopped
-
-    env_file:
-      - .env
-
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-
-    command:
-      - postgres
-      - -c
-      - listen_addresses=*
-      - -c
-      - wal_level=logical
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-    ports:
-      - "55433:5432"
-
-    volumes:
-      - pgdata_replica2:/var/lib/postgresql/data
-      - ./db/replications/common:/docker-entrypoint-initdb.d:ro
-      - ./db/replications/subscriber:/docker-entrypoint-replications:ro
-
-    networks:
-      - traveler_network
 
 
   app:
@@ -139,7 +98,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SERVER_PORT: ${APP_PORT}
 
     ports:
       - "${APP_PORT}:${APP_PORT}"
@@ -150,8 +108,7 @@ services:
 
 volumes:
   pgdata:
-  pgdata_replica:
-  pgdata_replica2:
+  pgdata_physical:
 
 networks:
   traveler_network:
