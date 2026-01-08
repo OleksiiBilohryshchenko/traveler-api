@@ -1,0 +1,91 @@
+version: "3.9"
+
+x-postgres-common: &postgres-common
+  image: postgres:16-alpine
+  restart: unless-stopped
+  environment:
+    POSTGRES_USER: ${DB_USER:-postgres}
+    POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+  command:
+    - postgres
+    - -c
+    - listen_addresses=*
+    - -c
+    - wal_level=logical
+    - -c
+    - max_connections=200
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+    interval: 5s
+    timeout: 3s
+    retries: 5
+    start_period: 10s
+  networks:
+    - sharding_network
+
+services:
+  # ============ NODE 0: db_0, db_1, db_2, db_3 ============
+  postgres_00:
+    <<: *postgres-common
+    container_name: postgres_00
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_MULTIPLE_DATABASES: db_0,db_1,db_2,db_3
+    volumes:
+      - pgdata_00:/var/lib/postgresql/data
+      - ./db/sharding/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+
+  # ============ NODE 1: db_4, db_5, db_6, db_7 ============
+  postgres_01:
+    <<: *postgres-common
+    container_name: postgres_01
+    ports:
+      - "5441:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_MULTIPLE_DATABASES: db_4,db_5,db_6,db_7
+    volumes:
+      - pgdata_01:/var/lib/postgresql/data
+      - ./db/sharding/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+
+  # ============ NODE 2: db_8, db_9, db_a, db_b ============
+  postgres_02:
+    <<: *postgres-common
+    container_name: postgres_02
+    ports:
+      - "5442:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_MULTIPLE_DATABASES: db_8,db_9,db_a,db_b
+    volumes:
+      - pgdata_02:/var/lib/postgresql/data
+      - ./db/sharding/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+
+  # ============ NODE 3: db_c, db_d, db_e, db_f ============
+  postgres_03:
+    <<: *postgres-common
+    container_name: postgres_03
+    ports:
+      - "5443:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_MULTIPLE_DATABASES: db_c,db_d,db_e,db_f
+    volumes:
+      - pgdata_03:/var/lib/postgresql/data
+      - ./db/sharding/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+
+volumes:
+  pgdata_00:
+  pgdata_01:
+  pgdata_02:
+  pgdata_03:
+
+networks:
+  sharding_network:
+    driver: bridge

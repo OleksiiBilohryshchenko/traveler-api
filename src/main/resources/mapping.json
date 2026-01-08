@@ -1,0 +1,21 @@
+{
+  "shards": {
+    "0": { "host": "localhost", "port": 5440, "database": "db_0", "node": "postgres_00" },
+    "1": { "host": "localhost", "port": 5440, "database": "db_1", "node": "postgres_00" },
+    "2": { "host": "localhost", "port": 5440, "database": "db_2", "node": "postgres_00" },
+    "3": { "host": "localhost", "port": 5440, "database": "db_3", "node": "postgres_00" },
+    "4": { "host": "localhost", "port": 5441, "database": "db_4", "node": "postgres_01" },
+    "5": { "host": "localhost", "port": 5441, "database": "db_5", "node": "postgres_01" },
+    "6": { "host": "localhost", "port": 5441, "database": "db_6", "node": "postgres_01" },
+    "7": { "host": "localhost", "port": 5441, "database": "db_7", "node": "postgres_01" },
+    "8": { "host": "localhost", "port": 5442, "database": "db_8", "node": "postgres_02" },
+    "9": { "host": "localhost", "port": 5442, "database": "db_9", "node": "postgres_02" },
+    "a": { "host": "localhost", "port": 5442, "database": "db_a", "node": "postgres_02" },
+    "b": { "host": "localhost", "port": 5442, "database": "db_b", "node": "postgres_02" },
+    "c": { "host": "localhost", "port": 5443, "database": "db_c", "node": "postgres_03" },
+    "d": { "host": "localhost", "port": 5443, "database": "db_d", "node": "postgres_03" },
+    "e": { "host": "localhost", "port": 5443, "database": "db_e", "node": "postgres_03" },
+    "f": { "host": "localhost", "port": 5443, "database": "db_f", "node": "postgres_03" }
+  },
+  "version": 1
+}
