@@ -37,7 +37,6 @@ public class TravelPlan {
 
     @DecimalMin("0.00")
     @Digits(integer = 12, fraction = 2)
-    @Builder.Default
     private BigDecimal budget = BigDecimal.ZERO;
 
     @Pattern(regexp = "^[A-Z]{3}$")
@@ -60,7 +59,6 @@ public class TravelPlan {
     public void prePersist() {
         createdAt = OffsetDateTime.now();
         updatedAt = createdAt;
-        if (version == null) version = 1;
     }
 
     @PreUpdate

@@ -31,15 +31,17 @@ public class LocationController {
         return svc.addLocation(planId, req);
     }
 
-    @PutMapping("/locations/{id}")
-    public Location update(@PathVariable UUID id,
+    @PutMapping("/travel-plans/{planId}/locations/{locationId}")
+    public Location update(@PathVariable UUID planId,
+                           @PathVariable UUID locationId,
                            @Valid @RequestBody UpdateLocationRequest req) {
-        return svc.updateLocation(id, req);
+        return svc.updateLocation(planId, locationId, req);
     }
 
-    @DeleteMapping("/locations/{id}")
+    @DeleteMapping("/travel-plans/{planId}/locations/{locationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        svc.deleteLocation(id);
+    public void delete(@PathVariable UUID planId,
+                       @PathVariable UUID locationId) {
+        svc.deleteLocation(planId, locationId);
     }
 }

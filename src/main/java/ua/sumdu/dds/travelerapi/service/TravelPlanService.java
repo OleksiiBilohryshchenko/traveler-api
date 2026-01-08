@@ -33,7 +33,7 @@ public class TravelPlanService {
         return plans.findAll();
     }
 
-    public TravelPlan get(UUID id) {
+    public TravelPlan getById(UUID id) {
         return plans.findById(id)
                 .orElseThrow(() -> new NotFoundException("Travel plan not found"));
     }
@@ -57,7 +57,7 @@ public class TravelPlanService {
 
     @Transactional
     public TravelPlan update(UUID id, UpdateTravelPlanRequest r) {
-        TravelPlan p = get(id); // 404
+        TravelPlan p = getById(id); // 404
 
         LocalDate newStart = r.startDate() != null ? r.startDate() : p.getStartDate();
         LocalDate newEnd   = r.endDate() != null   ? r.endDate()   : p.getEndDate();
@@ -95,7 +95,7 @@ public class TravelPlanService {
 
     @Transactional
     public Location addLocation(UUID planId, CreateLocationRequest r) {
-        TravelPlan p = get(planId);
+        TravelPlan p = getById(planId);
 
         int nextOrder = locations.findByTravelPlan_IdOrderByVisitOrderAsc(planId)
                 .stream()
@@ -131,48 +131,73 @@ public class TravelPlanService {
     }
 
     @Transactional
-    public Location updateLocation(UUID id, UpdateLocationRequest r) {
-        Location l = locations.findById(id)
+    public Location updateLocation(UUID planId,
+                                   UUID locationId,
+                                   UpdateLocationRequest r) {
+
+        TravelPlan p = getById(planId);
+
+        Location l = locations.findById(locationId)
                 .orElseThrow(() -> new NotFoundException("Location not found"));
+
+        if (!l.getTravelPlan().getId().equals(p.getId())) {
+            throw new NotFoundException("Location not found in travel plan");
+        }
 
         if (r.version() != null && !l.getVersion().equals(r.version())) {
             throw new VersionConflictException(l.getVersion());
         }
 
-        OffsetDateTime newArrival = r.arrivalDate() != null ? r.arrivalDate() : l.getArrivalDate();
-        OffsetDateTime newDeparture = r.departureDate() != null ? r.departureDate() : l.getDepartureDate();
+        OffsetDateTime newArrival =
+                r.arrivalDate() != null ? r.arrivalDate() : l.getArrivalDate();
+        OffsetDateTime newDeparture =
+                r.departureDate() != null ? r.departureDate() : l.getDepartureDate();
 
-        if (newArrival != null && newDeparture != null && newDeparture.isBefore(newArrival)) {
+        if (newArrival != null && newDeparture != null &&
+                newDeparture.isBefore(newArrival)) {
             throw new ValidationException(
                     List.of("departure_date must be after or equal to arrival_date")
             );
         }
 
-        if (r.name() != null)        l.setName(r.name());
-        if (r.address() != null)     l.setAddress(r.address());
-        if (r.latitude() != null)    l.setLatitude(r.latitude());
-        if (r.longitude() != null)   l.setLongitude(r.longitude());
-        if (r.budget() != null)      l.setBudget(r.budget());
-        if (r.notes() != null)       l.setNotes(r.notes());
+        if (r.name() != null)      l.setName(r.name());
+        if (r.address() != null)   l.setAddress(r.address());
+        if (r.latitude() != null)  l.setLatitude(r.latitude());
+        if (r.longitude() != null) l.setLongitude(r.longitude());
+        if (r.budget() != null)    l.setBudget(r.budget());
+        if (r.notes() != null)     l.setNotes(r.notes());
 
         l.setArrivalDate(newArrival);
         l.setDepartureDate(newDeparture);
 
+        // optimistic locking: child + parent
         l.setVersion(l.getVersion() + 1);
-        return locations.save(l);
-    }
+        p.setVersion(p.getVersion() + 1);
 
+        return l;
+    }
 
     @Transactional
-    public void deleteLocation(UUID id) {
-        if (!locations.existsById(id)) {
-            throw new NotFoundException("Location not found");
+    public void deleteLocation(UUID planId,
+                               UUID locationId) {
+
+        TravelPlan p = getById(planId);
+
+        Location l = locations.findById(locationId)
+                .orElseThrow(() -> new NotFoundException("Location not found"));
+
+        if (!l.getTravelPlan().getId().equals(p.getId())) {
+            throw new NotFoundException("Location not found in travel plan");
         }
-        locations.deleteById(id);
+
+        locations.delete(l);
+
+        p.setVersion(p.getVersion() + 1);
     }
 
+
     public List<Location> listLocations(UUID planId) {
-        get(planId);
+        getById(planId);
         return locations.findByTravelPlan_IdOrderByVisitOrderAsc(planId);
     }
 }

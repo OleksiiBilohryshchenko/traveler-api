@@ -33,7 +33,7 @@ public class TravelPlanController {
 
     @GetMapping("/{id}")
     public TravelPlan get(@PathVariable UUID id) {
-        return svc.get(id);
+        return svc.getById(id);
     }
 
     @PutMapping("/{id}")
