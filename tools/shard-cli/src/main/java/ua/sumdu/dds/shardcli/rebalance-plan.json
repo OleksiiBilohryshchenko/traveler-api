@@ -1,0 +1,23 @@
+{
+  "moves": [
+    { "db": "db_0", "from": "postgres_00", "to": "postgres_01" },
+    { "db": "db_1", "from": "postgres_00", "to": "postgres_01" },
+    { "db": "db_2", "from": "postgres_00", "to": "postgres_01" },
+    { "db": "db_3", "from": "postgres_00", "to": "postgres_01" },
+
+    { "db": "db_4", "from": "postgres_01", "to": "postgres_02" },
+    { "db": "db_5", "from": "postgres_01", "to": "postgres_02" },
+    { "db": "db_6", "from": "postgres_01", "to": "postgres_02" },
+    { "db": "db_7", "from": "postgres_01", "to": "postgres_02" },
+
+    { "db": "db_8", "from": "postgres_02", "to": "postgres_03" },
+    { "db": "db_9", "from": "postgres_02", "to": "postgres_03" },
+    { "db": "db_a", "from": "postgres_02", "to": "postgres_03" },
+    { "db": "db_b", "from": "postgres_02", "to": "postgres_03" },
+
+    { "db": "db_c", "from": "postgres_03", "to": "postgres_00" },
+    { "db": "db_d", "from": "postgres_03", "to": "postgres_00" },
+    { "db": "db_e", "from": "postgres_03", "to": "postgres_00" },
+    { "db": "db_f", "from": "postgres_03", "to": "postgres_00" }
+  ]
+}
