@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "shard": "0",
+      "database": "db_0",
+      "from": {
+        "node": "postgres_00",
+        "host": "postgres_00",
+        "port": 5432
+      },
+      "to": {
+        "node": "postgres_01",
+        "host": "postgres_01",
+        "port": 5432
+      }
+    }
+  ]
+}

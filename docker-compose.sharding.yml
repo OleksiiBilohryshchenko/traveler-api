@@ -79,12 +79,35 @@ services:
     volumes:
       - pgdata_03:/var/lib/postgresql/data
       - ./db/sharding/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+  # ============ REGISTRY (control-plane) ============
+  postgres_registry:
+    image: postgres:16-alpine
+    container_name: postgres_registry
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dds_registry
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5450:5432"
+    volumes:
+      - pgdata_registry:/var/lib/postgresql/data
+      - ./db/registry/001_init_registry.sql:/docker-entrypoint-initdb.d/001_init_registry.sql:ro
+    networks:
+      - sharding_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d dds_registry" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
 volumes:
   pgdata_00:
   pgdata_01:
   pgdata_02:
   pgdata_03:
+  pgdata_registry:
 
 networks:
   sharding_network:
