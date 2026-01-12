@@ -2,11 +2,16 @@ package ua.sumdu.dds.travelerapi.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.Type;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -54,9 +59,34 @@ public class Location {
 
     private String notes;
 
+    /**
+     * Flexible JSONB attributes storage.
+     *
+     * Example structure:
+     * {
+     *   "rating": 4.5,
+     *   "category": "museum",
+     *   "contact": {
+     *     "phone": "+33123456789",
+     *     "website": "https://example.com",
+     *     "email": "info@example.com"
+     *   },
+     *   "business_hours": {
+     *     "monday": "09:00-18:00",
+     *     "tuesday": "09:00-18:00",
+     *     "wednesday": "closed"
+     *   },
+     *   "accessibility": ["wheelchair", "elevator", "audio_guide"],
+     *   "tags": ["historical", "art", "architecture"]
+     * }
+     */
+    @Type(JsonBinaryType.class)
+    @Column(name = "attributes", columnDefinition = "jsonb")
+    @Builder.Default
+    private Map<String, Object> attributes = new HashMap<>();
+
     @Version
     private Integer version;
-
 
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
@@ -65,12 +95,13 @@ public class Location {
     public void prePersist() {
         createdAt = OffsetDateTime.now();
         if (version == null) version = 1;
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
     }
-
 
     @JsonProperty("travel_plan_id")
     public UUID getTravelPlanId() {
         return travelPlan.getId();
     }
-
 }

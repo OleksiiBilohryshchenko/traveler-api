@@ -1,13 +1,18 @@
 package ua.sumdu.dds.travelerapi.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.Type;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -47,6 +52,29 @@ public class TravelPlan {
     @JsonProperty("is_public")
     private boolean isPublic;
 
+    /**
+     * Flexible JSONB metadata storage.
+     *
+     * Example structure:
+     * {
+     *   "preferences": {
+     *     "budget_category": "moderate",
+     *     "travel_style": "adventure",
+     *     "pace": "relaxed"
+     *   },
+     *   "participants": [
+     *     {"name": "John", "age": 30, "role": "organizer"}
+     *   ],
+     *   "tags": ["family", "summer", "europe"],
+     *   "custom_fields": {
+     *     "any_user_defined_key": "any_value"
+     *   }
+     * }
+     */
+    @Type(JsonBinaryType.class)
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    @Builder.Default
+    private Map<String, Object> metadata = new HashMap<>();
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
@@ -59,6 +87,9 @@ public class TravelPlan {
     public void prePersist() {
         createdAt = OffsetDateTime.now();
         updatedAt = createdAt;
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
     }
 
     @PreUpdate
